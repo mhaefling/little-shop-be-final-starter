@@ -97,5 +97,16 @@ RSpec.describe Coupon, type: :model do
       
       expect(Coupon.invoice_coupon_count(coupon)).to eq(3)
     end
+
+    it 'finds coupons by merchant id' do
+      merchants = create_list(:merchant, 2)
+
+      coupon = create(:coupon, name: '50% Off Next Repair', code: '50PONRP', dollar_off: nil, percent_off: 50, status: 'active', merchant_id: merchants[0].id)
+      coupon = create(:coupon, name: '10% Off Next Repair', code: '10PONRP', dollar_off: nil, percent_off: 10, status: 'inactive', merchant_id: merchants[0].id)
+      coupon = create(:coupon, name: '10 Dollars Off', code: '10DO', dollar_off: 10.0, percent_off: nil, status: 'active', merchant_id: merchants[1].id)
+
+      expect(Coupon.coupons_by_merchant(merchants[0]).count).to eq(2)
+      expect(Coupon.coupons_by_merchant(merchants[1]).count).to eq(1)
+    end
   end
 end
