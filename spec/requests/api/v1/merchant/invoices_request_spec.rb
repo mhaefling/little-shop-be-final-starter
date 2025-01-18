@@ -26,6 +26,7 @@ RSpec.describe "Merchant invoices endpoints" do
     expect(json[:data][0][:type]).to eq("invoice")
     expect(json[:data][0][:attributes][:customer_id]).to eq(@customer1.id)
     expect(json[:data][0][:attributes][:merchant_id]).to eq(@merchant1.id)
+    expect(json[:data][0][:attributes][:coupon_id]).to be_a(Integer).or eq(nil)
     expect(json[:data][0][:attributes][:status]).to eq("packaged")
   end
 
@@ -39,7 +40,7 @@ RSpec.describe "Merchant invoices endpoints" do
   end
 
   it "should only get invoices for merchant given" do
-    get "/api/v1/merchants/#{@merchant2.id}/invoices?status=shipped"
+    get "/api/v1/merchants/#{@merchant2.id}/invoices"
 
     json = JSON.parse(response.body, symbolize_names: true)
 
