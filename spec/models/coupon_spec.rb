@@ -101,12 +101,26 @@ RSpec.describe Coupon, type: :model do
     end
 
     it 'finds the count of active coupons by merchant id' do
-      coupon4 = create(:coupon, name: '50% Off Next Repair', code: '50PONRP', dollar_off: nil, percent_off: 50, status: 'active', merchant_id: @merchants[0].id)
-      coupon5 = create(:coupon, name: '10% Off Next Repair', code: '10PONRP', dollar_off: nil, percent_off: 10, status: 'inactive', merchant_id: @merchants[0].id)
-      coupon6 = create(:coupon, name: 'There once was a coupon', code: 'NAMEDMATT', dollar_off: nil, percent_off: 35, status: 'active', merchant_id: @merchants[0].id)
-      coupon7 = create(:coupon, name: '10 Dollars Off', code: '10DO', dollar_off: 10.0, percent_off: nil, status: 'active', merchant_id: @merchants[2].id)
+      coupon1 = create(:coupon, name: '50% Off Next Repair', code: '50PONRP', dollar_off: nil, percent_off: 50, status: 'active', merchant_id: @merchants[0].id)
+      coupon2 = create(:coupon, name: '10% Off Next Repair', code: '10PONRP', dollar_off: nil, percent_off: 10, status: 'inactive', merchant_id: @merchants[0].id)
+      coupon3 = create(:coupon, name: 'There once was a coupon', code: 'NAMEDMATT', dollar_off: nil, percent_off: 35, status: 'active', merchant_id: @merchants[0].id)
+      coupon4 = create(:coupon, name: '10 Dollars Off', code: '10DO', dollar_off: 10.0, percent_off: nil, status: 'active', merchant_id: @merchants[2].id)
 
       expect(Coupon.active_coupon_count(@merchants[0])).to eq(2)
+    end
+
+    it 'finds the count of invoices with a given coupon_id that are pending / packaged' do
+      coupon1 = create(:coupon, name: '50% Off Next Repair', code: '50PONRP', dollar_off: nil, percent_off: 50, status: 'active', merchant_id: @merchants[0].id)
+      coupon2 = create(:coupon, name: '10% Off Next Repair', code: '10PONRP', dollar_off: nil, percent_off: 10, status: 'inactive', merchant_id: @merchants[0].id)
+      coupon3 = create(:coupon, name: 'There once was a coupon', code: 'NAMEDMATT', dollar_off: nil, percent_off: 35, status: 'active', merchant_id: @merchants[0].id)
+      coupon4 = create(:coupon, name: '10 Dollars Off', code: '10DO', dollar_off: 10.0, percent_off: nil, status: 'active', merchant_id: @merchants[2].id)
+
+      invoice1 = create(:invoice, status: 'shipped', customer_id: @customers[0].id, merchant_id: @merchants[0].id, coupon_id: coupon1.id)
+      invoice2 = create(:invoice, status: 'packaged', customer_id: @customers[1].id, merchant_id: @merchants[1].id, coupon_id: coupon1.id)
+      invoice3 = create(:invoice, status: 'shipped', customer_id: @customers[1].id, merchant_id: @merchants[2].id, coupon_id: coupon1.id)
+      invoice4 = create(:invoice, status: 'packaged', customer_id: @customers[0].id, merchant_id: @merchants[0].id, coupon_id: coupon1.id)
+
+      expect(Coupon.coupons_with_packaged_invoices(coupon1)).to eq(2)
     end
   end
 end
