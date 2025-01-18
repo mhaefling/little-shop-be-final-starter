@@ -39,7 +39,7 @@ RSpec.describe "Coupons endpoints", :type => :request do
     it "should return 404 and error message when merchant is not found" do
       get "/api/v1/merchants/100000/coupons"
   
-      json = JSON.parse(response.body, symbolize_names: true)
+      JSON.parse(response.body, symbolize_names: true)
   
       expect(response).to_not be_successful
       expect(response.status).to eq(404)
@@ -98,7 +98,7 @@ RSpec.describe "Coupons endpoints", :type => :request do
       }
 
       post "/api/v1/merchants/#{@merchants[0].id}/coupons", params: body, as: :json
-      new_coupon = JSON.parse(response.body, symbolize_names: true) [:data]
+      JSON.parse(response.body, symbolize_names: true) [:data]
 
       expect(response).to_not be_successful
       expect(response.status).to eq(403)
