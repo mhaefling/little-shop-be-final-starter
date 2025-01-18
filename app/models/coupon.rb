@@ -22,6 +22,10 @@ class Coupon < ApplicationRecord
     where(merchant_id: merchant.id)
   end
 
+  def self.coupons_with_packaged_invoices(coupon)
+    joins(:invoices).where(["invoices.status = :status and invoices.coupon_id = :id", { status: "packaged", id: coupon.id }]).count
+  end
+
   private
 
   def confirm_discount_type_present

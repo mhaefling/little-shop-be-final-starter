@@ -19,6 +19,7 @@ RSpec.describe "Coupons endpoints", :type => :request do
     @invoice4 = create(:invoice, customer_id: @customers[2].id, merchant_id: @merchants[2].id, status: 'shipped', coupon_id: @coupon6.id)
     @invoice5 = create(:invoice, customer_id: @customers[2].id, merchant_id: @merchants[2].id, status: 'shipped', coupon_id: @coupon6.id)
     @invoice6 = create(:invoice, customer_id: @customers[2].id, merchant_id: @merchants[2].id, status: 'shipped', coupon_id: @coupon6.id)
+    @invoice7 = create(:invoice, customer_id: @customers[2].id, merchant_id: @merchants[2].id, status: 'packaged', coupon_id: @coupon6.id)
   end
 
   describe 'JSON Response Structure' do
@@ -64,7 +65,7 @@ RSpec.describe "Coupons endpoints", :type => :request do
       expect(coupon_data[:attributes][:status]).to eq(@coupon6.status)
       expect(coupon_data[:attributes][:merchant_id]).to eq(@coupon6.merchant_id)
 
-      expect(coupon_meta[:usage_count]).to eq(3)
+      expect(coupon_meta[:usage_count]).to eq(4)
 
     end
   end
@@ -75,6 +76,44 @@ RSpec.describe "Coupons endpoints", :type => :request do
 
       expect(response).to_not be_successful
       expect(response.status).to eq(404)
+    end
+  end
+
+  describe 'PATCH /api/v1/coupons/:id' do
+    it 'changes a coupons status from active to inactive' do
+
+      body = {
+        status: "inactive"
+      }
+
+      expect(@coupon1.status).to eq('active')
+
+      patch "/api/v1/coupons/#{@coupon1.id}", params: body, as: :json
+
+      coupon = JSON.parse(response.body, symbolize_names: true)[:data]
+
+      expect(response).to be_successful
+      expect(response.status).to eq(200)
+
+      expect(coupon[:attributes][:status]).to eq('inactive')
+    end
+  end
+
+  describe 'SAD PATH: PATCH /api/v1/coupons/:id' do
+    it 'confirms coupons with pending "packaged" invoices can not be deactivated' do
+
+      body = {
+        status: "inactive"
+      }
+
+      expect(@coupon6.status).to eq('active')
+
+      patch "/api/v1/coupons/#{@coupon6.id}", params: body, as: :json
+      JSON.parse(response.body, symbolize_names: true)
+
+      expect(response).to_not be_successful
+      expect(response.status).to eq(403)
+      expect(@coupon6.status).to eq('active')
     end
   end
 end
