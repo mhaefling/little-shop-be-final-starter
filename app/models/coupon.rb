@@ -10,12 +10,16 @@ class Coupon < ApplicationRecord
   belongs_to :merchant
   has_many :invoices
 
-  def self.invoice_coupon_count(coupon)
-    Invoice.where(coupon_id: coupon.id).count
+  def self.coupon_invoice_count(coupon)
+    joins(:invoices).where("invoices.coupon_id = #{coupon.id}").count
   end
 
   def self.active_coupon_count(merchant)
     where(status: 'active', merchant_id: merchant.id).count
+  end
+
+  def self.inactive_coupon_count(merchant)
+    where(status: 'inactive', merchant_id: merchant.id).count
   end
   
   def self.coupons_by_merchant(merchant)

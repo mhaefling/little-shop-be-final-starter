@@ -51,25 +51,26 @@ RSpec.describe "Coupons endpoints", :type => :request do
     end
   end
 
-  describe 'GET /api/v1/coupons/:id' do
-    it 'Confirms correct coupon w/ usage_count attribute on JSON response.' do
+  describe 'HAPPY PATH: GET /api/v1/coupons/:id' do
+    it 'returns the requested coupon with a usage_count attribute' do
       get "/api/v1/coupons/#{@coupon6.id}"
 
       expect(response).to be_successful
       expect(response.status).to eq(200)
 
       coupon_data = JSON.parse(response.body, symbolize_names: true)[:data]
+      coupon_attribs = JSON.parse(response.body, symbolize_names: true)[:data][:attributes]
       coupon_meta = JSON.parse(response.body, symbolize_names: true)[:meta]
 
       expect(coupon_data[:id].to_i).to eq(@coupon6.id)
       expect(coupon_data[:type]).to eq('coupon')
 
-      expect(coupon_data[:attributes][:name]).to eq(@coupon6.name)
-      expect(coupon_data[:attributes][:code]).to eq(@coupon6.code)
-      expect(coupon_data[:attributes][:dollar_off]).to eq(@coupon6.dollar_off)
-      expect(coupon_data[:attributes][:percent_off]).to eq(@coupon6.percent_off)
-      expect(coupon_data[:attributes][:status]).to eq(@coupon6.status)
-      expect(coupon_data[:attributes][:merchant_id]).to eq(@coupon6.merchant_id)
+      expect(coupon_attribs[:name]).to eq(@coupon6.name)
+      expect(coupon_attribs[:code]).to eq(@coupon6.code)
+      expect(coupon_attribs[:dollar_off]).to eq(@coupon6.dollar_off)
+      expect(coupon_attribs[:percent_off]).to eq(@coupon6.percent_off)
+      expect(coupon_attribs[:status]).to eq(@coupon6.status)
+      expect(coupon_attribs[:merchant_id]).to eq(@coupon6.merchant_id)
 
       expect(coupon_meta[:usage_count]).to eq(4)
 
@@ -77,7 +78,7 @@ RSpec.describe "Coupons endpoints", :type => :request do
   end
 
   describe 'SAD PATH: GET /api/v1/coupons/:id' do
-    it 'Returns 404 Error when provided invalid coupon ID' do
+    it 'RETURNS 404 not found when requested coupon_id doesnt exist' do
       get "/api/v1/coupons/133713371337"
 
       expect(response).to_not be_successful
@@ -85,12 +86,17 @@ RSpec.describe "Coupons endpoints", :type => :request do
     end
   end
 
-  describe 'PATCH /api/v1/coupons/:id?status=' do
+  describe 'HAPPY PATH: PATCH /api/v1/coupons/:id' do
     it 'changes a coupons status from active to inactive' do
+
+      status = 'inactive'
+      body = {
+        status: status
+      }
 
       expect(@coupon1.status).to eq('active')
 
-      patch "/api/v1/coupons/#{@coupon1.id}?status=inactive"
+      patch "/api/v1/coupons/#{@coupon1.id}", params: body, as: :json
 
       coupon = JSON.parse(response.body, symbolize_names: true)[:data]
 
@@ -101,10 +107,13 @@ RSpec.describe "Coupons endpoints", :type => :request do
     end
 
     it 'changes a coupons status from inactive to active' do
-      
+      status = 'active'
+      body = {
+        status: status
+      }
       expect(@coupon4.status).to eq('inactive')
 
-      patch "/api/v1/coupons/#{@coupon4.id}?status=active"
+      patch "/api/v1/coupons/#{@coupon4.id}", params: body, as: :json
 
       coupon = JSON.parse(response.body, symbolize_names: true)[:data]
 
@@ -115,12 +124,16 @@ RSpec.describe "Coupons endpoints", :type => :request do
     end
   end
 
-  describe 'SAD PATH: PATCH /api/v1/coupons/:id?status=' do
+  describe 'SAD PATH: PATH: PATCH /api/v1/coupons/:id' do
     it 'confirms coupons with pending "packaged" invoices can not be deactivated' do
+      status = 'inactive'
+      body = {
+        status: status
+      }
 
       expect(@coupon6.status).to eq('active')
 
-      patch "/api/v1/coupons/#{@coupon6.id}?status=inactive"
+      patch "/api/v1/coupons/#{@coupon6.id}", params: body, as: :json
       JSON.parse(response.body, symbolize_names: true)
 
       expect(response).to_not be_successful
@@ -129,18 +142,26 @@ RSpec.describe "Coupons endpoints", :type => :request do
     end
 
     it 'confirms existing coupons cannot change from inactive to active if their merchant already has 5 active coupons' do
-      
+      status = 'active'
+      body = {
+        status: status
+      }
       expect(@coupon10.status).to eq('inactive')
 
-      patch "/api/v1/coupons/#{@coupon10.id}?status=active"
+      patch "/api/v1/coupons/#{@coupon10.id}", params: body, as: :json
       JSON.parse(response.body, symbolize_names: true)
 
       expect(response).to_not be_successful
       expect(response.status).to eq(403)
+      expect(@coupon10.status).to eq('inactive')
     end
 
-    it 'errors if no value is provided in the status param' do
-      patch "/api/v1/coupons/#{@coupon10.id}?status="
+    it 'errors if status attribute is missing active/inactive' do
+      status = ''
+      body = {
+        status: status
+      }
+      patch "/api/v1/coupons/#{@coupon10.id}", params: body, as: :json
       JSON.parse(response.body, symbolize_names: true)
 
       expect(response).to_not be_successful
