@@ -20,7 +20,7 @@ class Api::V1::CouponsController < ApplicationController
       end
     when 'active'
       merchant = Merchant.find(coupon.merchant_id)
-      if Coupon.active_coupon_count(merchant) >= 5
+      if Coupon.active_coupons(merchant).count >= 5
         render json: { error: "This merchant already has five active coupons"}, status: :forbidden
       else 
         coupon.update(coupon_params)

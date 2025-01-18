@@ -15,7 +15,8 @@ RSpec.describe "Coupons endpoints", :type => :request do
     @coupon7 = create(:coupon, name: 'The Word', code: 'NO', dollar_off: nil, percent_off: 50, status: 'active', merchant_id: @merchants[0].id)
     @coupon8 = create(:coupon, name: 'Coupon has', code: 'MORE', dollar_off: nil, percent_off: 10, status: 'active', merchant_id: @merchants[0].id)
     @coupon9 = create(:coupon, name: 'Lost all meaning', code: 'COUPONS', dollar_off: nil, percent_off: 50, status: 'active', merchant_id: @merchants[0].id)
-
+    @coupon10 = create(:coupon, name: 'neverendingcoupons', code: 'THEYNEVEREND', dollar_off: nil, percent_off: 50, status: 'inactive', merchant_id: @merchants[0].id)
+    @coupon11 = create(:coupon, name: 'we like all the coupons', code: 'COLLECTTHEMALL', dollar_off: nil, percent_off: 10, status: 'inactive', merchant_id: @merchants[0].id)
   end
 
   describe 'HAPPY PATH: GET /api/v1/merchants/:merchant_id/coupons' do
@@ -38,6 +39,47 @@ RSpec.describe "Coupons endpoints", :type => :request do
 
       expect(coupons_meta[:active_coupons]).to eq(2)
       expect(coupons_meta[:inactive_coupons]).to eq(0)
+    end
+
+    it 'return filtered coupons for a given merchant id "active"' do
+      get "/api/v1/merchants/#{@merchants[0].id}/coupons?status=active"
+
+      expect(response).to be_successful
+      expect(response.status).to eq(200)
+
+      coupons_data = JSON.parse(response.body, symbolize_names: true)[:data]
+      coupons_meta = JSON.parse(response.body, symbolize_names: true)[:meta]
+
+      expect(coupons_data).to be_a(Array)
+      expect(coupons_data.count).to eq(5)
+      expect(coupons_meta).to be_a(Hash)
+
+      expect(coupons_data[0][:id]).to eq(@coupon1.id.to_s)
+      expect(coupons_data[1][:id]).to eq(@coupon2.id.to_s)
+      expect(coupons_data[2][:id]).to eq(@coupon7.id.to_s)
+      expect(coupons_data[3][:id]).to eq(@coupon8.id.to_s)
+      expect(coupons_data[4][:id]).to eq(@coupon9.id.to_s)
+
+      expect(coupons_meta[:active_coupons]).to eq(5)
+    end
+
+    it 'returns filtered coupons for a given merchant "inactive"' do
+      get "/api/v1/merchants/#{@merchants[0].id}/coupons?status=inactive"
+
+      expect(response).to be_successful
+      expect(response.status).to eq(200)
+
+      coupons_data = JSON.parse(response.body, symbolize_names: true)[:data]
+      coupons_meta = JSON.parse(response.body, symbolize_names: true)[:meta]
+
+      expect(coupons_data).to be_a(Array)
+      expect(coupons_data.count).to eq(2)
+      expect(coupons_meta).to be_a(Hash)
+
+      expect(coupons_data[0][:id]).to eq(@coupon10.id.to_s)
+      expect(coupons_data[1][:id]).to eq(@coupon11.id.to_s)
+
+      expect(coupons_meta[:inactive_coupons]).to eq(2)
     end
   end
 
@@ -110,7 +152,7 @@ RSpec.describe "Coupons endpoints", :type => :request do
       expect(response.status).to eq(403)
     end
 
-    it 'retur 400 when requested Merchant ID doesnt match coupon' do
+    it 'return 400 when requested Merchant ID doesnt match coupon' do
       name = "Way to many coupons"
       code = "MOREANDMORECOUPONS"
       dollar_off = nil
