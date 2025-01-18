@@ -18,25 +18,31 @@ RSpec.describe "Coupons endpoints", :type => :request do
 
   end
 
-  describe 'Coupons by Merchant ID' do
-    it 'return all coupons for a given merchant' do
+  describe 'HAPPY PATH: GET /api/v1/merchants/:merchant_id/coupons' do
+    it 'return all coupons for a given merchant ID' do
       get "/api/v1/merchants/#{@merchants[2].id}/coupons"
 
       expect(response).to be_successful
       expect(response.status).to eq(200)
 
-      coupons = JSON.parse(response.body, symbolize_names: true)[:data]
+      coupons_data = JSON.parse(response.body, symbolize_names: true)[:data]
+      coupons_meta = JSON.parse(response.body, symbolize_names: true)[:meta]
 
-      expect(coupons).to be_a(Array)
-      expect(coupons.count).to eq(2)
 
-      expect(coupons[0][:id]).to eq(@coupon5.id.to_s)
-      expect(coupons[1][:id]).to eq(@coupon6.id.to_s)
+      expect(coupons_data).to be_a(Array)
+      expect(coupons_data.count).to eq(2)
+      expect(coupons_meta).to be_a(Hash)
+
+      expect(coupons_data[0][:id]).to eq(@coupon5.id.to_s)
+      expect(coupons_data[1][:id]).to eq(@coupon6.id.to_s)
+
+      expect(coupons_meta[:active_coupons]).to eq(2)
+      expect(coupons_meta[:inactive_coupons]).to eq(0)
     end
   end
 
   describe 'SAD PATH: GET /api/v1/merchants/:merchant_id/coupons' do
-    it "should return 404 and error message when merchant is not found" do
+    it "return 404 and error message when merchant is not found" do
       get "/api/v1/merchants/100000/coupons"
   
       JSON.parse(response.body, symbolize_names: true)
@@ -46,7 +52,7 @@ RSpec.describe "Coupons endpoints", :type => :request do
     end
   end
 
-  describe 'Create Coupon for a Merchant' do
+  describe 'HAPPTY PATH: POST /api/v1/merchants/:merchant_id/coupons' do
     it 'creates new coupons for a given Merchant' do
       name = "Testing Coupon1"
       code = "TESTING123"
@@ -102,6 +108,29 @@ RSpec.describe "Coupons endpoints", :type => :request do
 
       expect(response).to_not be_successful
       expect(response.status).to eq(403)
+    end
+
+    it 'retur 400 when requested Merchant ID doesnt match coupon' do
+      name = "Way to many coupons"
+      code = "MOREANDMORECOUPONS"
+      dollar_off = nil
+      percent_off = 20
+      status = 'active'
+
+      body = {
+        name: name,
+        code: code,
+        dollar_off: dollar_off,
+        percent_off: percent_off,
+        status: status,
+        merchant_id: @merchants[1].id
+      }
+
+      post "/api/v1/merchants/#{@merchants[2].id}/coupons", params: body, as: :json
+      JSON.parse(response.body, symbolize_names: true) [:data]
+
+      expect(response).to_not be_successful
+      expect(response.status).to eq(400)
     end
   end
 end
