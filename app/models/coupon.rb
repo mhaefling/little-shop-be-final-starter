@@ -14,6 +14,10 @@ class Coupon < ApplicationRecord
     Invoice.where(coupon_id: coupon.id).count
   end
 
+  def self.active_coupon_count(merchant)
+    where(status: 'active', merchant_id: merchant.id).count
+  end
+  
   def self.coupons_by_merchant(merchant)
     where(merchant_id: merchant.id)
   end
