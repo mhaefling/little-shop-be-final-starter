@@ -43,4 +43,8 @@ class Merchant < ApplicationRecord
   def self.find_one_merchant_by_name(name)
     Merchant.find_all_by_name(name).order("LOWER(name)").first
   end
+
+  def self.invoices_by_merchant_with_coupons(merchant)
+    joins(:invoices).where(invoices: { merchant_id: 1 }).where.not(invoices: { coupon_id: nil}).count
+  end
 end
