@@ -42,6 +42,22 @@ describe Merchant, type: :model do
       expect(Merchant.find_one_merchant_by_name("ring")).to eq(merchant2)
       expect(Merchant.find_all_by_name("ring")).to eq([merchant1, merchant2])
     end
+
+    it "#invoices_by_merchant_with_coupons should return the count of all invoices for a specific merchant that had a coupon applied to them" do
+      merchant = create(:merchant)
+      other_merchant = create(:merchant)
+      customer = create(:customer)
+
+      coupon = create(:coupon, name: "The Final Coupon!", code: "FINAL", dollar_off: nil, percent_off: 100, status: 'active', merchant_id: merchant.id)
+
+      invoice1 = create(:invoice, customer_id: customer.id, merchant_id: merchant.id, status: 'shipped', coupon_id: coupon.id)
+      invoice2 = create(:invoice, customer_id: customer.id, merchant_id: merchant.id, status: 'shipped', coupon_id: coupon.id)
+      invoice3 = create(:invoice, customer_id: customer.id, merchant_id: other_merchant.id, status: 'shipped', coupon_id: nil)
+      invoice4 = create(:invoice, customer_id: customer.id, merchant_id: merchant.id, status: 'shipped', coupon_id: nil)
+
+      expect(Merchant.invoices_by_merchant_with_coupons(merchant)).to eq(2)
+      expect(Merchant.invoices_by_merchant_with_coupons(other_merchant)).to eq(0)
+    end
   end
 
   describe "instance methods" do
