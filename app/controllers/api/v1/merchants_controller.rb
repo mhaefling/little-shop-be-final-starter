@@ -5,7 +5,7 @@ class Api::V1::MerchantsController < ApplicationController
 
     if params[:sorted].present? && params[:sorted] == "age"
       merchants = merchants.sorted_by_creation
-    elsif params[:status].present? &&
+    elsif params[:status].present?
       merchants = Merchant.filter_by_status(params[:status])
     end
 
