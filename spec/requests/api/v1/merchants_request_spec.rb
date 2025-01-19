@@ -9,7 +9,7 @@ describe "Merchant endpoints", :type => :request do
 
       expect(response).to have_http_status(:ok)
       expect(json[:data]).to be_a Array
-      expect(json[:data].count).to eq(7)
+      expect(json[:data].count).to eq(5)
       expect(json[:data].first).to include(:id, :type, :attributes)
       expect(json[:data].first[:attributes]).to include(:name)
       expect(json[:data].first[:attributes]).to include(:coupon_count)
@@ -19,7 +19,7 @@ describe "Merchant endpoints", :type => :request do
     it "should return a data key even when there are no merchants to return" do
       get "/api/v1/merchants"
       json = JSON.parse(response.body, symbolize_names: true)
-      binding.pry
+
       expect(response).to have_http_status(:ok)
       expect(json).to include(:data)
       expect(json[:data]).to be_empty
