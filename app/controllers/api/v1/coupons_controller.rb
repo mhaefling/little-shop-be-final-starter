@@ -12,8 +12,20 @@ class Api::V1::CouponsController < ApplicationController
 
     if Coupon.coupons_by_status(merchant, 'active').count >= 5
       new_coupon.destroy
-      render json: { error: "This merchant already has five active coupons" }, status: :forbidden
-
+      render json: { message: 'This merchant already has five active coupons', errors: [
+        {
+          status: '403',
+          detail: 'Please deactivate an active coupon first.'
+        }
+      ]}, status: :forbidden
+    
+    elsif new_coupon.save == false
+      render json: { message: new_coupon.errors.full_messages[0], errors: [
+        { 
+          status: '403',
+          detail: 'Another coupon already exists with this name, or coupon code.'
+        }
+      ]}, status: :forbidden
     else
       new_coupon.save
       render json: CouponSerializer.new(new_coupon), status: :created
@@ -35,7 +47,12 @@ class Api::V1::CouponsController < ApplicationController
     when 'active'
       merchant = Merchant.find(coupon.merchant_id)
       if Coupon.coupons_by_status(merchant, 'active').count >= 5
-        render json: { error: "This merchant already has five active coupons"}, status: :forbidden
+        render json: { message: 'This merchant already has five active coupons', errors: [
+          {
+            status: '403',
+            detail: 'Please deactivate an active coupon first.'
+          }
+        ]}, status: :forbidden
       else 
         coupon.update(coupon_params)
         coupon.save
