@@ -6,6 +6,20 @@ class Api::V1::CouponsController < ApplicationController
     render json: CouponSerializer.new(coupon, meta_data), status: :ok
   end
 
+  def create
+    merchant = Merchant.find(params[:merchant_id])
+    new_coupon = Coupon.new(coupon_params)
+
+    if Coupon.active_coupons(merchant).count >= 5
+      new_coupon.destroy
+      render json: { error: "This merchant already has five active coupons" }, status: :forbidden
+
+    else
+      new_coupon.save
+      render json: CouponSerializer.new(new_coupon), status: :created
+    end
+  end
+
   def update
     coupon = Coupon.find(params[:id])
 
@@ -34,6 +48,6 @@ class Api::V1::CouponsController < ApplicationController
 
   private
   def coupon_params
-    params.permit(:status)
+    params.permit(:name, :code, :dollar_off, :percent_off, :status, :merchant_id)
   end
 end
