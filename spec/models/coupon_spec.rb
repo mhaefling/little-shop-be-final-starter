@@ -106,7 +106,7 @@ RSpec.describe Coupon, type: :model do
       coupon3 = create(:coupon, name: 'There once was a coupon', code: 'NAMEDMATT', dollar_off: nil, percent_off: 35, status: 'active', merchant_id: @merchants[0].id)
       coupon4 = create(:coupon, name: '10 Dollars Off', code: '10DO', dollar_off: 10.0, percent_off: nil, status: 'active', merchant_id: @merchants[2].id)
 
-      expect(Coupon.active_coupons(@merchants[0]).count).to eq(2)
+      expect(Coupon.coupons_by_status(@merchants[0], 'active').count).to eq(2)
     end
 
     it 'finds the count of inactive coupons by merchant id' do
@@ -115,7 +115,7 @@ RSpec.describe Coupon, type: :model do
       coupon3 = create(:coupon, name: 'There once was a coupon', code: 'NAMEDMATT', dollar_off: nil, percent_off: 35, status: 'active', merchant_id: @merchants[0].id)
       coupon4 = create(:coupon, name: '10 Dollars Off', code: '10DO', dollar_off: 10.0, percent_off: nil, status: 'active', merchant_id: @merchants[2].id)
 
-      expect(Coupon.inactive_coupons(@merchants[0]).count).to eq(1)
+      expect(Coupon.coupons_by_status(@merchants[0], 'inactive').count).to eq(1)
     end
 
     it 'finds the count of invoices with a given coupon_id that are pending / packaged' do

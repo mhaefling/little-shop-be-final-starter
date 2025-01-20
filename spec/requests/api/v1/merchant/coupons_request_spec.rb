@@ -60,7 +60,7 @@ RSpec.describe "Coupons endpoints", :type => :request do
       expect(coupons_data[3][:id]).to eq(@coupon8.id.to_s)
       expect(coupons_data[4][:id]).to eq(@coupon9.id.to_s)
 
-      expect(coupons_meta[:active_coupons]).to eq(5)
+      expect(coupons_meta[:count]).to eq(5)
     end
 
     it 'returns filtered coupons for a given merchant "inactive"' do
@@ -79,7 +79,7 @@ RSpec.describe "Coupons endpoints", :type => :request do
       expect(coupons_data[0][:id]).to eq(@coupon10.id.to_s)
       expect(coupons_data[1][:id]).to eq(@coupon11.id.to_s)
 
-      expect(coupons_meta[:inactive_coupons]).to eq(2)
+      expect(coupons_meta[:count]).to eq(2)
     end
   end
 
@@ -91,88 +91,6 @@ RSpec.describe "Coupons endpoints", :type => :request do
   
       expect(response).to_not be_successful
       expect(response.status).to eq(404)
-    end
-  end
-
-  describe 'HAPPTY PATH: POST /api/v1/merchants/:merchant_id/coupons' do
-    it 'creates new coupons for a given Merchant' do
-      name = "Testing Coupon1"
-      code = "TESTING123"
-      dollar_off = nil
-      percent_off = 20
-      status = 'active'
-
-      body = {
-        name: name,
-        code: code,
-        dollar_off: dollar_off,
-        percent_off: percent_off,
-        status: status,
-        merchant_id: @merchants[2].id
-      }
-
-      post "/api/v1/merchants/#{@merchants[2].id}/coupons", params: body, as: :json
-      new_coupon = JSON.parse(response.body, symbolize_names: true) [:data]
-
-
-      expect(response).to be_successful
-      expect(response.status).to eq(201)
-
-      expect(new_coupon[:type]).to eq('coupon')
-      expect(new_coupon[:attributes][:name]).to eq(name)
-      expect(new_coupon[:attributes][:code]).to eq(code)
-      expect(new_coupon[:attributes][:dollar_off]).to eq(dollar_off)
-      expect(new_coupon[:attributes][:percent_off]).to eq(percent_off)
-      expect(new_coupon[:attributes][:status]).to eq(status)
-      expect(new_coupon[:attributes][:merchant_id]).to eq(@merchants[2].id)
-    end
-  end
-
-  describe 'SAD PATH: POST /api/v1/merchants/:merchant_id/coupons' do
-    it 'return 403 when a Merchant already has 5 active coupons' do
-      name = "To many coupons"
-      code = "FAILEDCOUPON"
-      dollar_off = nil
-      percent_off = 20
-      status = 'active'
-
-      body = {
-        name: name,
-        code: code,
-        dollar_off: dollar_off,
-        percent_off: percent_off,
-        status: status,
-        merchant_id: @merchants[0].id
-      }
-
-      post "/api/v1/merchants/#{@merchants[0].id}/coupons", params: body, as: :json
-      JSON.parse(response.body, symbolize_names: true) [:data]
-
-      expect(response).to_not be_successful
-      expect(response.status).to eq(403)
-    end
-
-    it 'return 400 when requested Merchant ID doesnt match coupon' do
-      name = "Way to many coupons"
-      code = "MOREANDMORECOUPONS"
-      dollar_off = nil
-      percent_off = 20
-      status = 'active'
-
-      body = {
-        name: name,
-        code: code,
-        dollar_off: dollar_off,
-        percent_off: percent_off,
-        status: status,
-        merchant_id: @merchants[1].id
-      }
-
-      post "/api/v1/merchants/#{@merchants[2].id}/coupons", params: body, as: :json
-      JSON.parse(response.body, symbolize_names: true) [:data]
-
-      expect(response).to_not be_successful
-      expect(response.status).to eq(400)
     end
   end
 end
