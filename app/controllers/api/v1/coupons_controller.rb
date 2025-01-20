@@ -59,7 +59,12 @@ class Api::V1::CouponsController < ApplicationController
         render json: CouponSerializer.new(coupon), status: :ok
       end
     else
-      render json: { error: "'status:' attribute must have value 'active' or 'inactive'" }, status: :bad_request
+      render json: { message: "'status:' attribute must have value 'active' or 'inactive'", errors: [
+        {
+          status: '400',
+          detail: 'Coupons can only be a status of active or inactive'
+        }
+      ]}, status: :bad_request
     end
   end
 
