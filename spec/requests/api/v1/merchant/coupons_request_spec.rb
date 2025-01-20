@@ -60,7 +60,7 @@ RSpec.describe "Coupons endpoints", :type => :request do
       expect(coupons_data[3][:id]).to eq(@coupon8.id.to_s)
       expect(coupons_data[4][:id]).to eq(@coupon9.id.to_s)
 
-      expect(coupons_meta[:active_coupons]).to eq(5)
+      expect(coupons_meta[:count]).to eq(5)
     end
 
     it 'returns filtered coupons for a given merchant "inactive"' do
@@ -79,7 +79,7 @@ RSpec.describe "Coupons endpoints", :type => :request do
       expect(coupons_data[0][:id]).to eq(@coupon10.id.to_s)
       expect(coupons_data[1][:id]).to eq(@coupon11.id.to_s)
 
-      expect(coupons_meta[:inactive_coupons]).to eq(2)
+      expect(coupons_meta[:count]).to eq(2)
     end
   end
 
