@@ -1,4 +1,5 @@
 class Api::V1::CouponsController < ApplicationController
+
   def show
     coupon = Coupon.find(params[:id])
     meta_data = {}
@@ -14,11 +15,8 @@ class Api::V1::CouponsController < ApplicationController
       new_coupon.destroy
       raise ActionController::ActionControllerError, "Merchants can only have 5 active coupons, please deactivate one and try again."
     
-    elsif new_coupon.save
+    elsif new_coupon.save!
       render json: CouponSerializer.new(new_coupon), status: :created
-
-    else
-      raise ActiveRecord::RecordInvalid.new(new_coupon)
     end
   end
 
