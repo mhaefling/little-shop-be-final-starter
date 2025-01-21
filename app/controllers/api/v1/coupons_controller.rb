@@ -12,23 +12,13 @@ class Api::V1::CouponsController < ApplicationController
 
     if Coupon.coupons_by_status(merchant, 'active').count >= 5
       new_coupon.destroy
-      render json: { message: 'This merchant already has five active coupons', errors: [
-        {
-          status: '403',
-          detail: 'Please deactivate an active coupon first.'
-        }
-      ]}, status: :forbidden
+      raise ActionController::ActionControllerError, "Merchants can only have 5 active coupons, please deactivate one and try again."
     
-    elsif new_coupon.save == false
-      render json: { message: new_coupon.errors.full_messages[0], errors: [
-        { 
-          status: '403',
-          detail: 'Another coupon already exists with this name, or coupon code.'
-        }
-      ]}, status: :forbidden
-    else
-      new_coupon.save
+    elsif new_coupon.save
       render json: CouponSerializer.new(new_coupon), status: :created
+
+    else
+      raise ActiveRecord::RecordInvalid.new(new_coupon)
     end
   end
 
@@ -38,7 +28,8 @@ class Api::V1::CouponsController < ApplicationController
     case coupon_params[:status]
     when "inactive"
       if Coupon.coupons_with_packaged_invoices(coupon) > 0
-        render json: { error: "Unable to Deactivate coupon with pending 'packaged' Invoices" }, status: :forbidden
+        raise ActionController::ActionControllerError, "Unable to Deactivate coupon with pending 'packaged' Invoices"
+
       else
         coupon.update(coupon_params)
         coupon.save
@@ -47,24 +38,14 @@ class Api::V1::CouponsController < ApplicationController
     when 'active'
       merchant = Merchant.find(coupon.merchant_id)
       if Coupon.coupons_by_status(merchant, 'active').count >= 5
-        render json: { message: 'This merchant already has five active coupons', errors: [
-          {
-            status: '403',
-            detail: 'Please deactivate an active coupon first.'
-          }
-        ]}, status: :forbidden
+        raise ActionController::ActionControllerError, "Merchants can only have 5 active coupons, please deactivate one and try again."
       else 
         coupon.update(coupon_params)
         coupon.save
         render json: CouponSerializer.new(coupon), status: :ok
       end
     else
-      render json: { message: "'status:' attribute must have value 'active' or 'inactive'", errors: [
-        {
-          status: '400',
-          detail: 'Coupons can only be a status of active or inactive'
-        }
-      ]}, status: :bad_request
+      raise ActionController::ActionControllerError, "Status must be 'active' or 'inactive', please correct and try again."
     end
   end
 

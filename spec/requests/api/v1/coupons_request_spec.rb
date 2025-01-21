@@ -224,7 +224,7 @@ RSpec.describe "Coupons endpoints", :type => :request do
       JSON.parse(response.body, symbolize_names: true)
 
       expect(response).to_not be_successful
-      expect(response.status).to eq(400)
+      expect(response.status).to eq(403)
     end
   end
 end

@@ -1,10 +1,14 @@
 class ApplicationController < ActionController::API
   rescue_from ActiveRecord::RecordInvalid do |e|
-    render json: ErrorSerializer.format_errors([ e.message ]), status: :unprocessable_entity
+    render json: ErrorSerializer.format_errors([e.message], '422' ), status: :unprocessable_entity
   end
 
   rescue_from ActiveRecord::RecordNotFound do |e|
-    render json: ErrorSerializer.format_errors([e.message]), status: :not_found
+    render json: ErrorSerializer.format_errors([e.message], '404'), status: :not_found
+  end
+
+  rescue_from ActionController::ActionControllerError do |e|
+    render json: ErrorSerializer.forbidden_action([e.message], '403'), status: :forbidden
   end
 
   def render_error
