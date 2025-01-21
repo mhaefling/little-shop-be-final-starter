@@ -87,10 +87,14 @@ RSpec.describe "Coupons endpoints", :type => :request do
     it "return 404 and error message when merchant is not found" do
       get "/api/v1/merchants/100000/coupons"
   
-      JSON.parse(response.body, symbolize_names: true)
+      error = JSON.parse(response.body, symbolize_names: true)
   
       expect(response).to_not be_successful
       expect(response.status).to eq(404)
+
+      expect(error[:message]).to eq("Your request could not be completed, please read the details below.")
+      expect(error[:errors][0][:status]).to eq("404")
+      expect(error[:errors][0][:detail]).to eq("Couldn't find Merchant with 'id'=100000")
     end
   end
 end

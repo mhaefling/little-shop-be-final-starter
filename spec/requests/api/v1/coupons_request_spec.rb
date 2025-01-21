@@ -81,8 +81,13 @@ RSpec.describe "Coupons endpoints", :type => :request do
     it 'RETURNS 404 not found when requested coupon_id doesnt exist' do
       get "/api/v1/coupons/133713371337"
 
+      error = JSON.parse(response.body, symbolize_names: true)
       expect(response).to_not be_successful
       expect(response.status).to eq(404)
+
+      expect(error[:message]).to eq('Your request could not be completed, please read the details below.')
+      expect(error[:errors][0][:status]).to eq("404")
+      expect(error[:errors][0][:detail]).to eq("Couldn't find Coupon with 'id'=133713371337")
     end
   end
 
@@ -138,13 +143,17 @@ RSpec.describe "Coupons endpoints", :type => :request do
       }
 
       post "/api/v1/coupons", params: body, as: :json
-      JSON.parse(response.body, symbolize_names: true) [:data]
+      error = JSON.parse(response.body, symbolize_names: true)
 
       expect(response).to_not be_successful
       expect(response.status).to eq(403)
+
+      expect(error[:message]).to eq("This actiion is forbidden, please read the details below.")
+      expect(error[:errors][0][:status]).to eq("403")
+      expect(error[:errors][0][:detail]).to eq("Merchants can only have 5 active coupons, please deactivate one and try again.")
     end
 
-    it 'returns 422 require invalid, if coupon with same name or code already exists in the db' do
+    it 'returns 422 request invalid, if coupon with same name or code already exists in the db' do
       name = "15% off lentil tacos"
       code = "FAILEDCOUPON"
       dollar_off = nil
@@ -161,10 +170,68 @@ RSpec.describe "Coupons endpoints", :type => :request do
       }
 
       post "/api/v1/coupons", params: body, as: :json
-      JSON.parse(response.body, symbolize_names: true) [:data]
+      error = JSON.parse(response.body, symbolize_names: true)
 
       expect(response).to_not be_successful
       expect(response.status).to eq(422)
+
+      expect(error[:message]).to eq("Your request could not be completed, please read the details below.")
+      expect(error[:errors][0][:status]).to eq("422")
+      expect(error[:errors][0][:detail]).to eq("Validation failed: Name has already been taken")
+    end
+
+    it 'retruns error 422 if dollar_off or percent_off are both nill' do
+      name = "To many coupons"
+      code = "FAILEDCOUPON"
+      dollar_off = nil
+      percent_off = nil
+      status = 'active'
+
+      body = {
+        name: name,
+        code: code,
+        dollar_off: dollar_off,
+        percent_off: percent_off,
+        status: status,
+        merchant_id: @merchants[1].id
+      }
+
+      post "/api/v1/coupons", params: body, as: :json
+      error = JSON.parse(response.body, symbolize_names: true)
+
+      expect(response).to_not be_successful
+      expect(response.status).to eq(422)
+
+      expect(error[:message]).to eq("Your request could not be completed, please read the details below.")
+      expect(error[:errors][0][:status]).to eq("422")
+      expect(error[:errors][0][:detail]).to eq("Validation failed: Either dollar_off or percent_off must have a value")
+    end
+
+    it 'retruns error 422 if dollar_off or percent_off both have a value' do
+      name = "To many coupons"
+      code = "FAILEDCOUPON"
+      dollar_off = 2.0
+      percent_off = 10
+      status = 'active'
+
+      body = {
+        name: name,
+        code: code,
+        dollar_off: dollar_off,
+        percent_off: percent_off,
+        status: status,
+        merchant_id: @merchants[1].id
+      }
+
+      post "/api/v1/coupons", params: body, as: :json
+      error = JSON.parse(response.body, symbolize_names: true)
+
+      expect(response).to_not be_successful
+      expect(response.status).to eq(422)
+
+      expect(error[:message]).to eq("Your request could not be completed, please read the details below.")
+      expect(error[:errors][0][:status]).to eq("422")
+      expect(error[:errors][0][:detail]).to eq("Validation failed: Only dollar_off or percent_off can have a value")
     end
   end
 
@@ -216,11 +283,15 @@ RSpec.describe "Coupons endpoints", :type => :request do
       expect(@coupon6.status).to eq('active')
 
       patch "/api/v1/coupons/#{@coupon6.id}", params: body, as: :json
-      JSON.parse(response.body, symbolize_names: true)
+      error = JSON.parse(response.body, symbolize_names: true)
 
       expect(response).to_not be_successful
       expect(response.status).to eq(403)
       expect(@coupon6.status).to eq('active')
+
+      expect(error[:message]).to eq("This actiion is forbidden, please read the details below.")
+      expect(error[:errors][0][:status]).to eq("403")
+      expect(error[:errors][0][:detail]).to eq("Unable to Deactivate coupon with pending 'packaged' Invoices")
     end
 
     it 'confirms existing coupons cannot change from inactive to active if their merchant already has 5 active coupons' do
@@ -231,11 +302,15 @@ RSpec.describe "Coupons endpoints", :type => :request do
       expect(@coupon10.status).to eq('inactive')
 
       patch "/api/v1/coupons/#{@coupon10.id}", params: body, as: :json
-      JSON.parse(response.body, symbolize_names: true)
+      error = JSON.parse(response.body, symbolize_names: true)
 
       expect(response).to_not be_successful
       expect(response.status).to eq(403)
       expect(@coupon10.status).to eq('inactive')
+
+      expect(error[:message]).to eq("This actiion is forbidden, please read the details below.")
+      expect(error[:errors][0][:status]).to eq("403")
+      expect(error[:errors][0][:detail]).to eq("Merchants can only have 5 active coupons, please deactivate one and try again.")
     end
 
     it 'errors if status attribute is missing active/inactive' do
@@ -244,10 +319,14 @@ RSpec.describe "Coupons endpoints", :type => :request do
         status: status
       }
       patch "/api/v1/coupons/#{@coupon10.id}", params: body, as: :json
-      JSON.parse(response.body, symbolize_names: true)
+      error = JSON.parse(response.body, symbolize_names: true)
 
       expect(response).to_not be_successful
       expect(response.status).to eq(403)
+
+      expect(error[:message]).to eq("This actiion is forbidden, please read the details below.")
+      expect(error[:errors][0][:status]).to eq("403")
+      expect(error[:errors][0][:detail]).to eq("Status must be 'active' or 'inactive', please correct and try again.")
     end
   end
 end
