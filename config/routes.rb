@@ -28,9 +28,5 @@ Rails.application.routes.draw do
       resources :coupons, only:[:show, :create, :update]
     end
   end
-
-  # get "/api/v1/coupons/:id", to: "api/v1/coupons#show"
   get "/api/v1/merchants/:id/coupons", to: "api/v1/merchants/coupons#index"
-  # post "/api/v1/coupons/", to: "api/v1/coupons#create"
-  # patch "/api/v1/coupons/:id", to: "api/v1/coupons#update"
 end
