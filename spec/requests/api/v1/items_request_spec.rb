@@ -56,9 +56,9 @@ describe "Item endpoints", :type => :request do
       json = JSON.parse(response.body, symbolize_names: true)
 
       expect(response).to have_http_status(:not_found)
-      expect(json[:message]).to eq("Your query could not be completed")
+      expect(json[:message]).to eq("Your request could not be completed, please read the details below.")
       expect(json[:errors]).to be_a Array
-      expect(json[:errors].first).to eq("Couldn't find Item with 'id'=100000")
+      expect(json[:errors][0][:detail]).to eq("Couldn't find Item with 'id'=100000")
     end
   end
 
@@ -94,7 +94,7 @@ describe "Item endpoints", :type => :request do
       json = JSON.parse(response.body, symbolize_names: true)
 
       expect(response).to have_http_status(:unprocessable_entity)
-      expect(json[:errors].first).to eq("Validation failed: Unit price can't be blank, Unit price is not a number")
+      expect(json[:errors][0][:detail]).to eq("Validation failed: Unit price can't be blank, Unit price is not a number")
     end
 
     it "should ignore unnecessary fields" do
@@ -138,7 +138,7 @@ describe "Item endpoints", :type => :request do
       json = JSON.parse(response.body, symbolize_names: true)
 
       expect(response).to have_http_status(:not_found)
-      expect(json[:errors].first).to eq("Couldn't find Item with 'id'=235")
+      expect(json[:errors][0][:detail]).to eq("Couldn't find Item with 'id'=235")
     end
   end
 
@@ -155,7 +155,7 @@ describe "Item endpoints", :type => :request do
       delete "/api/v1/items/678"
       json = JSON.parse(response.body, symbolize_names: true)
       expect(response).to have_http_status(:not_found)
-      expect(json[:errors].first).to eq("Couldn't find Item with 'id'=678")
+      expect(json[:errors][0][:detail]).to eq("Couldn't find Item with 'id'=678")
     end
   end
 end

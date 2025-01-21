@@ -143,6 +143,29 @@ RSpec.describe "Coupons endpoints", :type => :request do
       expect(response).to_not be_successful
       expect(response.status).to eq(403)
     end
+
+    it 'returns 422 require invalid, if coupon with same name or code already exists in the db' do
+      name = "15% off lentil tacos"
+      code = "FAILEDCOUPON"
+      dollar_off = nil
+      percent_off = 20
+      status = 'active'
+
+      body = {
+        name: name,
+        code: code,
+        dollar_off: dollar_off,
+        percent_off: percent_off,
+        status: status,
+        merchant_id: @merchants[1].id
+      }
+
+      post "/api/v1/coupons", params: body, as: :json
+      JSON.parse(response.body, symbolize_names: true) [:data]
+
+      expect(response).to_not be_successful
+      expect(response.status).to eq(422)
+    end
   end
 
   describe 'HAPPY PATH: PATCH /api/v1/coupons/:id' do
@@ -224,7 +247,7 @@ RSpec.describe "Coupons endpoints", :type => :request do
       JSON.parse(response.body, symbolize_names: true)
 
       expect(response).to_not be_successful
-      expect(response.status).to eq(400)
+      expect(response.status).to eq(403)
     end
   end
 end
